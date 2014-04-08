@@ -5,10 +5,7 @@
 #include <tuple>
 #include <boost\spirit\include\qi.hpp>
 #include <boost\spirit\include\support_ascii.hpp>
-#include <boost\spirit\include\phoenix_bind.hpp>
-#include <boost\spirit\include\phoenix_core.hpp>
-#include <boost\spirit\include\phoenix_object.hpp>
-#include <boost\spirit\include\phoenix_operator.hpp>
+#include <boost\spirit\include\phoenix.hpp>
 #include "LolcodeTypes.h"
 
 namespace lc {
@@ -18,7 +15,7 @@ namespace lc {
     namespace fusion = boost::fusion;
     typedef std::string::const_iterator string_itr;
 
-    std::map<std::string, LolcodeType*> vars;
+    std::map<std::string, LolcodeType*>* vars;
     NOOB undefined;
 
     template<class Iterator>
@@ -33,7 +30,7 @@ namespace lc {
 
     struct new_var{
         void operator()(std::string const& id, qi::unused_type, qi::unused_type) const{
-            vars.insert(std::pair<std::string, LolcodeType*>(id, &undefined));
+            vars->insert(std::pair<std::string, LolcodeType*>(id, &undefined));
         }
     };
 
@@ -42,14 +39,39 @@ namespace lc {
         void operator()(fusion::vector<std::string, std::string, LolcodeType*> const& v, qi::unused_type, qi::unused_type) const{
             std::string varId = fusion::at_c<0>(v);
             LolcodeType* value = fusion::at_c<2>(v);
-            auto it = vars.find(varId);
-            if (it != vars.end()) {
+            auto it = vars->find(varId);
+            if (it != vars->end()) {
                it->second = value;
             } else {
-                throw std::exception("cannot assign to an undeclared variable");
+                std::string msg = "cannot assign to an undeclared variable \"" 
+                                      + varId + "\"";
+                throw std::exception(msg.c_str());
             }
         }
     };
+
+    //lazy function
+    struct resolve_var_impl{
+
+        template <class Arg>
+        struct result{
+            typedef LolcodeType* type;
+        };
+
+        template<class Arg>
+        LolcodeType* operator()(Arg arg1) const{
+            auto it = vars->find(arg1);
+            if (it != vars->end()) {
+                return it->second;
+            }
+            else {
+                std::string msg = "could not resolve variable \"" + arg1 + "\"";
+                throw std::exception(msg.c_str());
+            }
+        }
+    };
+    phx::function<resolve_var_impl> resolve_var;
+
 
     struct print_expr{
         void operator()(LolcodeType* const& expr, qi::unused_type, qi::unused_type) const{
@@ -71,6 +93,12 @@ namespace lc {
             auto yarn = dynamic_cast<YARN*>(expr);
             if (yarn){
                 std::cout << yarn->value;
+                return;
+            }
+
+            auto noob = dynamic_cast<NOOB*>(expr);
+            if (noob){
+                std::cout << "undefined";
                 return;
             }
         }
@@ -137,8 +165,10 @@ namespace lc {
                     | double_[qi::_r0 = phx::new_<NUMBAR>(qi::_1)]
                     | int_[qi::_r0 = phx::new_<NUMBR>(qi::_1)]
                     | quoted_string[qi::_r0 = phx::new_<YARN>(qi::_1)]
+                    | identifier[qi::_r0 = resolve_var(qi::_1)]
                     ;
 
+            vars = new std::map<std::string, LolcodeType*>();
             //addition = "SUM OF" >> mathexpr[qi::_r0 = qi::_1] >> "AN" >> mathexpr[qi::_r0 += qi::_1];
             //mathexpr = addition | double_;
         }
