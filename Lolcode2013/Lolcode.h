@@ -34,11 +34,15 @@ namespace lc {
         }
     };
 
-    struct assign_var{
+    //lazy function
+    struct assign_var_impl{
+        template <class Arg1, class Arg2>
+        struct result{
+            typedef void type;
+        };
 
-        void operator()(fusion::vector<std::string, std::string, LolcodeType*> const& v, qi::unused_type, qi::unused_type) const{
-            std::string varId = fusion::at_c<0>(v);
-            LolcodeType* value = fusion::at_c<2>(v);
+        template<class Arg1, class Arg2>
+        void operator()(Arg1 varId, Arg2 value) const{
             auto it = vars->find(varId);
             if (it != vars->end()) {
                it->second = value;
@@ -49,10 +53,11 @@ namespace lc {
             }
         }
     };
+    phx::function<assign_var_impl> assign_var;
+
 
     //lazy function
     struct resolve_var_impl{
-
         template <class Arg>
         struct result{
             typedef LolcodeType* type;
@@ -72,6 +77,33 @@ namespace lc {
     };
     phx::function<resolve_var_impl> resolve_var;
 
+    //lazy function
+    struct minimum_impl{
+        template <class Arg1, class Arg2>
+        struct result{
+            typedef NUMBER type;
+        };
+
+        template<class Arg1, class Arg2>
+        NUMBER operator()(Arg1 number1, Arg2 number2) const{
+            return number1 < number2 ? number1 : number2;
+        }
+    };
+    phx::function<minimum_impl> minimum;
+
+    //lazy function
+    struct maximum_impl{
+        template <class Arg1, class Arg2>
+        struct result{
+            typedef NUMBER type;
+        };
+
+        template<class Arg1, class Arg2>
+        NUMBER operator()(Arg1 number1, Arg2 number2) const{
+            return number1 > number2 ? number1 : number2;
+        }
+    };
+    phx::function<maximum_impl> maximum;
 
     struct print_expr{
         void operator()(LolcodeType* const& expr, qi::unused_type, qi::unused_type) const{
@@ -93,6 +125,16 @@ namespace lc {
             auto yarn = dynamic_cast<YARN*>(expr);
             if (yarn){
                 std::cout << yarn->value;
+                return;
+            }
+
+            auto number = dynamic_cast<NUMBER*>(expr);
+            if (number){
+                if (number->isInt){
+                    std::cout << number->value.i;
+                } else {
+                    std::cout << number->value.d;
+                }
                 return;
             }
 
@@ -120,6 +162,9 @@ namespace lc {
             using qi::eoi;
 
             quoted_string = lexeme['"' >> +(char_ - '"') >> '"'];
+            quoted_double = lexeme['"' >> double_[qi::_r0 = qi::_1]  >> '"'];
+            quoted_int = lexeme['"' >> int_[qi::_r0 = qi::_1] >> '"'];
+
             identifier 
                     = lexeme[
                             (alpha || char_('_')) >> *(alpha || char_('_') || qi::digit)
@@ -141,6 +186,7 @@ namespace lc {
                     | visible >> eol
                     | varDecl >> eol
                     | assign >> eol
+                    | mathStat >> eol
                     | eol
                     ;
             
@@ -155,22 +201,78 @@ namespace lc {
             
             varDecl
                     = string("I") >> string("HAS") >> string("A") 
-                       >> identifier[new_var()]
-                       ;
+                       >> (identifier[new_var()] >> -(string("ITZ") >> expr[qi::_a = qi::_1]))
+                          [if_(qi::_2)[assign_var(qi::_1, qi::_a)]]
+                    ;
             
-            assign = (identifier >> string("R") >> expr)[assign_var()]
+            assign  = (identifier >> string("R") >> expr)[assign_var(qi::_1, qi::_3)]
+                    ;
+
+            mathStat 
+                    = addition[qi::_r0 = phx::new_<NUMBER>(qi::_1)]
+                    | substraction[qi::_r0 = phx::new_<NUMBER>(qi::_1)]
+                    | multiplication[qi::_r0 = phx::new_<NUMBER>(qi::_1)]
+                    | division[qi::_r0 = phx::new_<NUMBER>(qi::_1)]
+                    | mod[qi::_r0 = phx::new_<NUMBER>(qi::_1)]
+                    | min[qi::_r0 = phx::new_<NUMBER>(qi::_1)]
+                    | max[qi::_r0 = phx::new_<NUMBER>(qi::_1)]
+                    ;
+
+            addition    
+                    = string("SUM") >> string("OF") >> mathExpr[qi::_r0 = qi::_1] 
+                        >> +(string("AN") >> mathExpr[qi::_r0 += qi::_1])
+                    ;
+
+            substraction
+                    = string("DIFF") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
+                        >> +(string("AN") >> mathExpr[qi::_r0 -= qi::_1])
+                    ;
+
+            multiplication
+                    = string("PRODUKT") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
+                        >> +(string("AN") >> mathExpr[qi::_r0 *= qi::_1])
+                    ;
+
+            division
+                    = string("QUOSHUNT") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
+                        >> +(string("AN") >> mathExpr[qi::_r0 /= qi::_1])
+                    ;
+            
+            mod
+                    = string("MOD") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
+                        >> +(string("AN") >> mathExpr[qi::_r0 %= qi::_1])
+                    ;
+
+            min
+                    = string("SMALLR") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
+                        >> +(string("AN") >> mathExpr[qi::_r0 = minimum(qi::_r0, qi::_1)])
+                    ;
+
+            max
+                    = string("BIGGR") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
+                        >> +(string("AN") >> mathExpr[qi::_r0 = maximum(qi::_r0, qi::_1)])
+                    ;
+
+            
+            mathExpr
+                    = addition[qi::_r0 = qi::_1]
+                    | substraction[qi::_r0 = qi::_1]
+                    | bool_[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
+                    | double_[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
+                    | int_[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
+                    | quoted_double[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
+                    | quoted_int[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
                     ;
 
             expr    = bool_[qi::_r0 = phx::new_<TROOF>(qi::_1)]
                     | double_[qi::_r0 = phx::new_<NUMBAR>(qi::_1)]
                     | int_[qi::_r0 = phx::new_<NUMBR>(qi::_1)]
                     | quoted_string[qi::_r0 = phx::new_<YARN>(qi::_1)]
+                    | mathStat[qi::_r0 = qi::_1]
                     | identifier[qi::_r0 = resolve_var(qi::_1)]
                     ;
 
             vars = new std::map<std::string, LolcodeType*>();
-            //addition = "SUM OF" >> mathexpr[qi::_r0 = qi::_1] >> "AN" >> mathexpr[qi::_r0 += qi::_1];
-            //mathexpr = addition | double_;
         }
 
         qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>> start;
@@ -178,13 +280,23 @@ namespace lc {
         qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>> statement;
         qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>> canHas;
         qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>> visible;
-        qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>> varDecl;
+        qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>, boost::spirit::locals<LolcodeType*>> varDecl;
         qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>> assign;
-        qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>> addition;
         qi::rule<Iterator, LolcodeType*(), commentAndBlankSkipper<Iterator>> expr;
         qi::rule<Iterator, std::string(), commentAndBlankSkipper<Iterator>> quoted_string;
+        qi::rule<Iterator, double(), commentAndBlankSkipper<Iterator>> quoted_double;
+        qi::rule<Iterator, int(), commentAndBlankSkipper<Iterator>> quoted_int;
         qi::rule<Iterator, std::string(), commentAndBlankSkipper<Iterator>> identifier;
         qi::rule<Iterator, bool(), commentAndBlankSkipper<Iterator>> bool_;
+        qi::rule<Iterator, NUMBER(), commentAndBlankSkipper<Iterator>> addition;
+        qi::rule<Iterator, NUMBER(), commentAndBlankSkipper<Iterator>> substraction;
+        qi::rule<Iterator, NUMBER(), commentAndBlankSkipper<Iterator>> multiplication;
+        qi::rule<Iterator, NUMBER(), commentAndBlankSkipper<Iterator>> division;
+        qi::rule<Iterator, NUMBER(), commentAndBlankSkipper<Iterator>> mod;
+        qi::rule<Iterator, NUMBER(), commentAndBlankSkipper<Iterator>> min;
+        qi::rule<Iterator, NUMBER(), commentAndBlankSkipper<Iterator>> max;
+        qi::rule<Iterator, LolcodeType*(), commentAndBlankSkipper<Iterator>> mathStat;
+        qi::rule<Iterator, NUMBER(), commentAndBlankSkipper<Iterator>> mathExpr;
     };
 }
 
