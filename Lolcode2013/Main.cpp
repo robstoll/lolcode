@@ -28,54 +28,64 @@ void parse(std::string input){
 int main(int argc, char* args){
     using std::cout;
 
-    cout << "SUM OF two int (4 + 5): ";
-    parse("HAI \n VISIBLE SUM OF 4 AN 5 \n KTHXBYE");
-    cout << "SUM OF two double (1.0 + 2.3): ";
-    parse("HAI \n VISIBLE SUM OF 1.0 AN 2.3 \n KTHXBYE");
-    cout << "SUM OF int (1) and double 2.3: ";
-    parse("HAI \n VISIBLE SUM OF 1 AN 2.3 \n KTHXBYE");
-    cout << "SUM OF WIN (true=1) and int 5: ";
-    parse("HAI \n VISIBLE SUM OF WIN AN 5 \n KTHXBYE");
-    cout << "SUM OF FAIL (false=0) and double 2.3: ";
-    parse("HAI \n VISIBLE SUM OF FAIL AN 2.3 \n KTHXBYE");
+    cout << "BOTH OF (FAIL && FAIL): ";
+    parse("HAI \n VISIBLE BOTH OF FAIL AN FAIL\n KTHXBYE");
+    cout << "BOTH OF (WIN && FAIL): ";
+    parse("HAI \n VISIBLE BOTH OF WIN AN FAIL\n KTHXBYE");
+    cout << "BOTH OF (FAIL && WIN): ";
+    parse("HAI \n VISIBLE BOTH OF FAIL AN WIN\n KTHXBYE");
+    cout << "BOTH OF (WIN && WIN): ";
+    parse("HAI \n VISIBLE BOTH OF WIN AN WIN\n KTHXBYE");
     
     cout << std::endl;
-    cout << "SUM OF int 1 as string and int 3: ";
-    parse("HAI \n VISIBLE SUM OF \"1\" AN 3 \n KTHXBYE");
-    cout << "SUM OF int 1 as string and double 2.3: ";
-    parse("HAI \n VISIBLE SUM OF \"1\" AN 2.3 \n KTHXBYE");
-    cout << "SUM OF double 1.3 as string and double 2.3: ";
-    parse("HAI \n VISIBLE SUM OF \"1.3\" AN 2.3 \n KTHXBYE");
-    cout << "SUM OF int 1 as string and double 2.3 as string: ";
-    parse("HAI \n VISIBLE SUM OF \"1\" AN \"2.3\" \n KTHXBYE");
-    cout << "SUM OF multiple numbers (WIN + FAIL + 4 + 2.3 + \"2.3\" + \"7\"): ";
-    parse("HAI \n VISIBLE SUM OF WIN AN FAIL AN 4 AN 2.3 AN \"2.3\" AN \"7\" \n KTHXBYE");
-    cout << std::endl;
-    cout << "text instead of number in string: ";
-    parse("HAI \n VISIBLE SUM OF \"hello\" AN 1 \n KTHXBYE");
+    cout << "EITHER OF (FAIL && FAIL): ";
+    parse("HAI \n VISIBLE EITHER OF FAIL AN FAIL\n KTHXBYE");
+    cout << "EITHER OF (WIN && FAIL): ";
+    parse("HAI \n VISIBLE EITHER OF WIN AN FAIL\n KTHXBYE");
+    cout << "EITHER OF (FAIL && WIN): ";
+    parse("HAI \n VISIBLE EITHER OF FAIL AN WIN\n KTHXBYE");
+    cout << "EITHER OF (WIN && WIN): ";
+    parse("HAI \n VISIBLE EITHER OF WIN AN WIN\n KTHXBYE");
 
+    cout << std::endl;
+    cout << "WON OF (FAIL && FAIL): ";
+    parse("HAI \n VISIBLE WON OF FAIL AN FAIL\n KTHXBYE");
+    cout << "WON OF (WIN && FAIL): ";
+    parse("HAI \n VISIBLE WON OF WIN AN FAIL\n KTHXBYE");
+    cout << "WON OF (FAIL && WIN): ";
+    parse("HAI \n VISIBLE WON OF FAIL AN WIN\n KTHXBYE");
+    cout << "WON OF (WIN && WIN): ";
+    parse("HAI \n VISIBLE WON OF WIN AN WIN\n KTHXBYE");
+
+    cout << std::endl;
+    cout << "NOT FAIL: ";
+    parse("HAI \n VISIBLE NOT FAIL\n KTHXBYE");
+    cout << "NOT WIN: ";
+    parse("HAI \n VISIBLE NOT WIN\n KTHXBYE");
     
     cout << std::endl;
-    cout << "DIFF OF two ints (4-5): ";
-    parse("HAI \n VISIBLE DIFF OF 4 AN 5\n KTHXBYE");
-    cout << "PRODUKT OF two doubles (1.3*2.5): ";
-    parse("HAI \n VISIBLE PRODUKT OF 1.3 AN 2.5\n KTHXBYE");
-    cout << "QUOSHUNT OF two int as string (\"5\" / \"2\"): ";
-    parse("HAI \n VISIBLE QUOSHUNT OF \"5\" AN \"2\" \n KTHXBYE");
-    cout << "QUOSHUNT OF int 5 and double 2.5: ";
-    parse("HAI \n VISIBLE QUOSHUNT OF 5 AN 2.5 \n KTHXBYE");
-    cout << "MOD OF two int (5 % 3): ";
-    parse("HAI \n VISIBLE MOD OF 5 AN 3\n KTHXBYE");
-    cout << "MOD OF int 7.3 and double 2.1: ";
-    parse("HAI \n VISIBLE MOD OF 7.3 AN 2.1\n KTHXBYE");
-    cout << "BIGGR OF numbers (2, 4.5, WIN, FAIL, 3, 1.0): ";
-    parse("HAI \n VISIBLE BIGGR OF 2 AN 4.5 AN WIN AN FAIL AN 3 AN 1.0\n KTHXBYE");
-    cout << "SMALLR OF numbers (2, 4.5, WIN, FAIL, 3, 1.0): ";
-    parse("HAI \n VISIBLE SMALLR OF 2 AN 4.5 AN WIN AN FAIL AN 3 AN 1.0\n KTHXBYE");
+    cout << "ALL OF FAIL && FAIL && WIN: ";
+    parse("HAI \n VISIBLE ALL OF FAIL AN FAIL AN WIN\n KTHXBYE");
+    cout << "ALL OF WIN && FAIL && WIN: ";
+    parse("HAI \n VISIBLE ALL OF WIN AN FAIL AN WIN\n KTHXBYE");
+    cout << "ALL OF WIN && WIN && FAIL: ";
+    parse("HAI \n VISIBLE ALL OF WIN AN WIN AN FAIL\n KTHXBYE");
+    cout << "ALL OF WIN && WIN && WIN: ";
+    parse("HAI \n VISIBLE ALL OF WIN AN WIN AN WIN\n KTHXBYE");
     
     cout << std::endl;
-    cout << "nested expression: (2 + 3 * (4.5 - 2.2 - 1.3) * 1 + 0 + 3) / \"2\": ";
-    parse("HAI \n VISIBLE QUOSHUNT OF SUM OF 2 AN PRODUKT OF 3 AN DIFF OF 4.5 AN 2.2 AN 1.3 MKAY AN WIN MKAY AN FAIL AN 3 MKAY AN \"2\" \n KTHXBYE"); // 
+    cout << "ANY OF WIN && FAIL && WIN: ";
+    parse("HAI \n VISIBLE ANY OF WIN AN FAIL AN WIN\n KTHXBYE");
+    cout << "ANY OF FAIL && FAIL && WIN: ";
+    parse("HAI \n VISIBLE ANY OF FAIL AN FAIL AN WIN\n KTHXBYE");
+    cout << "ANY OF FAIL && WIN && FAIL: ";
+    parse("HAI \n VISIBLE ANY OF FAIL AN WIN AN FAIL\n KTHXBYE");
+    cout << "ANY OF FAIL && FAIL && WIN: ";
+    parse("HAI \n VISIBLE ANY OF FAIL AN FAIL AN FAIL\n KTHXBYE");
+
+    cout << std::endl;
+    cout << "bool expression used in math expression: ";
+    parse("HAI \n VISIBLE SUM OF EITHER OF WIN AN FAIL AN 2\n KTHXBYE");
 
     int s;
     std::cin >> s;

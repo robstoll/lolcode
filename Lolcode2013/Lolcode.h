@@ -197,6 +197,7 @@ namespace lc {
                     | varDecl >> eol
                     | assign >> eol
                     | mathStat >> eol
+                    | boolExpr >> eol
                     | eol
                     ;
             
@@ -219,6 +220,15 @@ namespace lc {
                     ;
             
             assign  = (identifier >> string("R") >> expr)[assign_var(qi::_1, qi::_3)]
+                    ;
+
+            expr    = bool_[qi::_r0 = phx::new_<TROOF>(qi::_1)]
+                    | real[qi::_r0 = phx::new_<NUMBAR>(qi::_1)]
+                    | int_[qi::_r0 = phx::new_<NUMBR>(qi::_1)]
+                    | quoted_string[qi::_r0 = phx::new_<YARN>(qi::_1)]
+                    | mathStat[qi::_r0 = qi::_1]
+                    | boolExpr[qi::_r0 = phx::new_<TROOF>(qi::_1)]
+                    | identifier[qi::_r0 = resolve_var(qi::_1)]
                     ;
 
             mathStat 
@@ -255,24 +265,21 @@ namespace lc {
                         >> -string("MKAY")
                     ;
             
-            mod
-                    = string("MOD") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
+            mod     = string("MOD") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
                         >> +(string("AN") >> mathExpr[qi::_r0 %= qi::_1]) 
                         >> -string("MKAY")
                     ;
 
-            min
-                    = string("SMALLR") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
+            min     = string("SMALLR") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
                      >> +(string("AN") >> mathExpr[qi::_r0 = minimum(qi::_r0, qi::_1)]) 
                      >> -string("MKAY")
                     ;
 
-            max
-                    = string("BIGGR") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
+            max     = string("BIGGR") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
                         >> +(string("AN") >> mathExpr[qi::_r0 = maximum(qi::_r0, qi::_1)]) 
                         >> -string("MKAY")
                     ;
-            
+
             mathExpr
                     = addition[qi::_r0 = qi::_1]
                     | substraction[qi::_r0 = qi::_1]
@@ -282,18 +289,28 @@ namespace lc {
                     | min[qi::_r0 = qi::_1]
                     | max[qi::_r0 = qi::_1]
                     | bool_[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
+                    | boolExpr[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
                     | real[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
                     | int_[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
                     | quoted_double[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
                     | quoted_int[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
                     ;
 
-            expr    = bool_[qi::_r0 = phx::new_<TROOF>(qi::_1)]
-                    | real[qi::_r0 = phx::new_<NUMBAR>(qi::_1)]
-                    | int_[qi::_r0 = phx::new_<NUMBR>(qi::_1)]
-                    | quoted_string[qi::_r0 = phx::new_<YARN>(qi::_1)]
-                    | mathStat[qi::_r0 = qi::_1]
-                    | identifier[qi::_r0 = resolve_var(qi::_1)]
+            boolExpr 
+                    = string("BOTH") >> string("OF") >> boolExpr[qi::_r0 = qi::_1] 
+                        >> string("AN") >> boolExpr[qi::_r0 = qi::_r0 && qi::_1]
+                    | string("EITHER") >> string("OF") >> boolExpr[qi::_r0 = qi::_1] 
+                        >> string("AN") >> boolExpr[qi::_r0 = qi::_r0 || qi::_1]
+                    | string("WON") >> string("OF") >> boolExpr[qi::_r0 = qi::_1] 
+                        >> string("AN") >> boolExpr[qi::_r0 = (qi::_r0 && !qi::_1) || (!qi::_r0 && qi::_1)]
+                    | string("NOT") >> boolExpr[qi::_r0 = !qi::_1]
+                    | string("ALL") >> string("OF") >> boolExpr[qi::_r0 = qi::_1] 
+                        >> +(string("AN") >> boolExpr[qi::_r0 = qi::_r0 && qi::_1]) 
+                        >> -string("MKAY")
+                    | string("ANY") >> string("OF") >> boolExpr[qi::_r0 = qi::_1]
+                        >> +(string("AN") >> boolExpr[qi::_r0 = qi::_r0 || qi::_1]) 
+                        >> -string("MKAY")
+                    | bool_[qi::_r0 = qi::_1]
                     ;
 
             vars = new std::map<std::string, LolcodeType*>();
@@ -304,7 +321,8 @@ namespace lc {
         qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>> statement;
         qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>> canHas;
         qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>> visible;
-        qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>, boost::spirit::locals<LolcodeType*>> varDecl;
+        qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>, 
+            boost::spirit::locals<LolcodeType*>> varDecl;
         qi::rule<Iterator, void(), commentAndBlankSkipper<Iterator>> assign;
         qi::rule<Iterator, LolcodeType*(), commentAndBlankSkipper<Iterator>> expr;
         qi::rule<Iterator, std::string(), commentAndBlankSkipper<Iterator>> quoted_string;
@@ -321,6 +339,7 @@ namespace lc {
         qi::rule<Iterator, NUMBER(), commentAndBlankSkipper<Iterator>> max;
         qi::rule<Iterator, LolcodeType*(), commentAndBlankSkipper<Iterator>> mathStat;
         qi::rule<Iterator, NUMBER(), commentAndBlankSkipper<Iterator>> mathExpr;
+        qi::rule<Iterator, bool(), commentAndBlankSkipper<Iterator>> boolExpr;
     };
 }
 
