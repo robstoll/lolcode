@@ -6,6 +6,7 @@
 #include <boost\spirit\include\qi.hpp>
 #include <boost\spirit\include\support_ascii.hpp>
 #include <boost\spirit\include\phoenix.hpp>
+#include <boost\spirit\include\qi_numeric.hpp>
 #include "LolcodeTypes.h"
 
 namespace lc {
@@ -146,6 +147,15 @@ namespace lc {
         }
     };
 
+    //Copied from http://stackoverflow.com/questions/3125582/boost-spirit-qi-numeric-parsing-of-integer-and-floating-points
+    template <typename T>
+    struct strict_real_policies : qi::real_policies<T>
+    {
+        static bool const expect_dot = true;
+    };
+
+    qi::real_parser< double, strict_real_policies<double> > real;
+
     template<class Iterator>
     struct lolcode : qi::grammar<Iterator, void(), commentAndBlankSkipper<Iterator>>
     {
@@ -201,7 +211,10 @@ namespace lc {
             
             varDecl
                     = string("I") >> string("HAS") >> string("A") 
-                       >> (identifier[new_var()] >> -(string("ITZ") >> expr[qi::_a = qi::_1]))
+                       >> (
+                                identifier[new_var()] >> 
+                                -(string("ITZ") >> expr[qi::_a = qi::_1])
+                          )
                           [if_(qi::_2)[assign_var(qi::_1, qi::_a)]]
                     ;
             
@@ -220,52 +233,63 @@ namespace lc {
 
             addition    
                     = string("SUM") >> string("OF") >> mathExpr[qi::_r0 = qi::_1] 
-                        >> +(string("AN") >> mathExpr[qi::_r0 += qi::_1])
+                        >> +(string("AN") >> mathExpr[qi::_r0 += qi::_1]) 
+                        >> -string("MKAY")
                     ;
 
             substraction
                     = string("DIFF") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
-                        >> +(string("AN") >> mathExpr[qi::_r0 -= qi::_1])
+                        >> +(string("AN") >> mathExpr[qi::_r0 -= qi::_1]) 
+                        >> -string("MKAY")
                     ;
 
             multiplication
                     = string("PRODUKT") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
-                        >> +(string("AN") >> mathExpr[qi::_r0 *= qi::_1])
+                        >> +(string("AN") >> mathExpr[qi::_r0 *= qi::_1]) 
+                        >> -string("MKAY")
                     ;
 
             division
                     = string("QUOSHUNT") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
-                        >> +(string("AN") >> mathExpr[qi::_r0 /= qi::_1])
+                        >> +(string("AN") >> mathExpr[qi::_r0 /= qi::_1]) 
+                        >> -string("MKAY")
                     ;
             
             mod
                     = string("MOD") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
-                        >> +(string("AN") >> mathExpr[qi::_r0 %= qi::_1])
+                        >> +(string("AN") >> mathExpr[qi::_r0 %= qi::_1]) 
+                        >> -string("MKAY")
                     ;
 
             min
                     = string("SMALLR") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
-                        >> +(string("AN") >> mathExpr[qi::_r0 = minimum(qi::_r0, qi::_1)])
+                     >> +(string("AN") >> mathExpr[qi::_r0 = minimum(qi::_r0, qi::_1)]) 
+                     >> -string("MKAY")
                     ;
 
             max
                     = string("BIGGR") >> string("OF") >> mathExpr[qi::_r0 = qi::_1]
-                        >> +(string("AN") >> mathExpr[qi::_r0 = maximum(qi::_r0, qi::_1)])
+                        >> +(string("AN") >> mathExpr[qi::_r0 = maximum(qi::_r0, qi::_1)]) 
+                        >> -string("MKAY")
                     ;
-
             
             mathExpr
                     = addition[qi::_r0 = qi::_1]
                     | substraction[qi::_r0 = qi::_1]
+                    | multiplication[qi::_r0 = qi::_1]
+                    | division[qi::_r0 = qi::_1]
+                    | mod[qi::_r0 = qi::_1]
+                    | min[qi::_r0 = qi::_1]
+                    | max[qi::_r0 = qi::_1]
                     | bool_[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
-                    | double_[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
+                    | real[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
                     | int_[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
                     | quoted_double[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
                     | quoted_int[qi::_r0 = phx::construct<NUMBER>(qi::_1)]
                     ;
 
             expr    = bool_[qi::_r0 = phx::new_<TROOF>(qi::_1)]
-                    | double_[qi::_r0 = phx::new_<NUMBAR>(qi::_1)]
+                    | real[qi::_r0 = phx::new_<NUMBAR>(qi::_1)]
                     | int_[qi::_r0 = phx::new_<NUMBR>(qi::_1)]
                     | quoted_string[qi::_r0 = phx::new_<YARN>(qi::_1)]
                     | mathStat[qi::_r0 = qi::_1]

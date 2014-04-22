@@ -57,6 +57,8 @@ struct NUMBER : LolcodeType{
         } else if (isInt){
             isInt = false;
             value.d = (double)value.i + n.value.d;
+        } else if (n.isInt) {
+            value.d += (double) n.value.i;
         } else {
             value.d += n.value.d;
         }
@@ -69,6 +71,8 @@ struct NUMBER : LolcodeType{
         } else if (isInt){
             isInt = false;
             value.d = (double)value.i - n.value.d;
+        } else if (n.isInt) {
+            value.d -= (double)n.value.i;
         } else {
             value.d -= n.value.d;
         }
@@ -81,6 +85,8 @@ struct NUMBER : LolcodeType{
         } else if (isInt){
             isInt = false;
             value.d = (double)value.i * n.value.d;
+        } else if (n.isInt) {
+            value.d *= (double) n.value.i;
         } else {
             value.d *= n.value.d;
         }
@@ -93,6 +99,8 @@ struct NUMBER : LolcodeType{
         } else if (isInt){
             isInt = false;
             value.d = (double)value.i / n.value.d;
+        } else if (n.isInt){
+            value.d /= (double) n.value.i;
         } else {
             value.d /= n.value.d;
         }
@@ -102,12 +110,12 @@ struct NUMBER : LolcodeType{
     NUMBER& operator%=(NUMBER& n){
         if (isInt && n.isInt){
             value.i %= n.value.i;
-        }
-        else if (isInt){
+        } else if (isInt){
             isInt = false;
             value.d = std::fmod(value.i, n.value.d);
-        }
-        else {
+        } else if (n.isInt){
+            value.d = std::fmod(value.d, (double) n.value.i);
+        } else {
             value.d = std::fmod(value.d, n.value.d);
         }
         return *this;
@@ -118,6 +126,8 @@ struct NUMBER : LolcodeType{
             return value.i > n.value.i;
         } else if (isInt){
             return value.i > n.value.d;
+        } else if (n.isInt){
+            return value.d > n.value.i;
         } else {
             return value.d > n.value.d;
         }
@@ -128,6 +138,8 @@ struct NUMBER : LolcodeType{
             return value.i < n.value.i;
         } else if (isInt){
             return value.i < n.value.d;
+        } else if (n.isInt){
+            return value.d < n.value.i;
         } else {
             return value.d < n.value.d;
         }

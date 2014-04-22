@@ -48,33 +48,34 @@ int main(int argc, char* args){
     parse("HAI \n VISIBLE SUM OF \"1.3\" AN 2.3 \n KTHXBYE");
     cout << "SUM OF int 1 as string and double 2.3 as string: ";
     parse("HAI \n VISIBLE SUM OF \"1\" AN \"2.3\" \n KTHXBYE");
-    cout << std::endl;
-    cout << "SUM OF multiple numbers (WIN+FAIL+4+2.3+\"2.3\"+\"7\"): ";
+    cout << "SUM OF multiple numbers (WIN + FAIL + 4 + 2.3 + \"2.3\" + \"7\"): ";
     parse("HAI \n VISIBLE SUM OF WIN AN FAIL AN 4 AN 2.3 AN \"2.3\" AN \"7\" \n KTHXBYE");
+    cout << std::endl;
+    cout << "text instead of number in string: ";
+    parse("HAI \n VISIBLE SUM OF \"hello\" AN 1 \n KTHXBYE");
+
     
     cout << std::endl;
-    cout << "DIFF OF two ints (4-5)";
+    cout << "DIFF OF two ints (4-5): ";
     parse("HAI \n VISIBLE DIFF OF 4 AN 5\n KTHXBYE");
-    cout << "PRODUKT OF two doubles (1.3*2.5)";
+    cout << "PRODUKT OF two doubles (1.3*2.5): ";
     parse("HAI \n VISIBLE PRODUKT OF 1.3 AN 2.5\n KTHXBYE");
-    cout << "QUOSHUNT OF two int as string (\"5\" / \"2\")";
+    cout << "QUOSHUNT OF two int as string (\"5\" / \"2\"): ";
     parse("HAI \n VISIBLE QUOSHUNT OF \"5\" AN \"2\" \n KTHXBYE");
-    cout << "QUOSHUNT OF int 5 and double 2.5";
+    cout << "QUOSHUNT OF int 5 and double 2.5: ";
     parse("HAI \n VISIBLE QUOSHUNT OF 5 AN 2.5 \n KTHXBYE");
     cout << "MOD OF two int (5 % 3): ";
     parse("HAI \n VISIBLE MOD OF 5 AN 3\n KTHXBYE");
-    cout << "MOD OF int 7 and double 2.5: ";
-    parse("HAI \n VISIBLE MOD OF 7 AN 2.5\n KTHXBYE");
+    cout << "MOD OF int 7.3 and double 2.1: ";
+    parse("HAI \n VISIBLE MOD OF 7.3 AN 2.1\n KTHXBYE");
     cout << "BIGGR OF numbers (2, 4.5, WIN, FAIL, 3, 1.0): ";
     parse("HAI \n VISIBLE BIGGR OF 2 AN 4.5 AN WIN AN FAIL AN 3 AN 1.0\n KTHXBYE");
     cout << "SMALLR OF numbers (2, 4.5, WIN, FAIL, 3, 1.0): ";
     parse("HAI \n VISIBLE SMALLR OF 2 AN 4.5 AN WIN AN FAIL AN 3 AN 1.0\n KTHXBYE");
     
     cout << std::endl;
-    cout << "NESTED addition and multiplication: ";
-    parse("HAI \n VISIBLE SMALLR OF 2 AN 4.5 AN WIN AN FAIL AN 3 AN 1.0\n KTHXBYE");
-
-    
+    cout << "nested expression: (2 + 3 * (4.5 - 2.2 - 1.3) * 1 + 0 + 3) / \"2\": ";
+    parse("HAI \n VISIBLE QUOSHUNT OF SUM OF 2 AN PRODUKT OF 3 AN DIFF OF 4.5 AN 2.2 AN 1.3 MKAY AN WIN MKAY AN FAIL AN 3 MKAY AN \"2\" \n KTHXBYE"); // 
 
     int s;
     std::cin >> s;
